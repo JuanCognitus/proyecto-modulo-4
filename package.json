@@ -1,6 +1,6 @@
 {
   "name": "proyecto-modulo-4---sistema-de-gestion-bancaria",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Sistema de gestión bancaria desarrollado como proyecto del módulo 4.",
   "main": "main.js",
   "type": "module",
