@@ -25,6 +25,55 @@ El proyecto utilizará las siguientes capas:
 - Utils
 - Tests
 
+## Modelos disponibles
+
+### Usuario
+
+Representa a una persona registrada dentro del sistema.
+
+Propiedades principales:
+
+- `id`
+- `nombre`
+- `email`
+- `telefono`
+- `password`
+- `activo`
+
+### Cuenta
+
+Representa una cuenta bancaria perteneciente a un usuario.
+
+Propiedades principales:
+
+- `id`
+- `numeroCuenta`
+- `tipo`
+- `saldo`
+- `usuarioId`
+- `fechaApertura`
+- `activa`
+
+Métodos disponibles:
+
+- `depositar()`
+- `retirar()`
+
+### Movimiento
+
+Representa una operación registrada sobre una cuenta.
+
+Propiedades principales:
+
+- `id`
+- `tipo`
+- `monto`
+- `descripcion`
+- `cuentaOrigen`
+- `cuentaDestino`
+- `saldoResultante`
+- `fecha`
+
 ## Funcionalidades previstas
 
 Durante las siguientes versiones se desarrollarán:
@@ -46,4 +95,4 @@ Durante las siguientes versiones se desarrollarán:
 
 ## Versión actual
 
-v0.2.0 — Arquitectura modular y utilidades base.
+v0.3.0 — Modelado del dominio con Programación Orientada a Objetos
