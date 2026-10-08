@@ -89,6 +89,13 @@ Propiedades principales:
 
 - realizarDeposito()
 
+### StorageService.js
+
+- LocalStorage
+- JSON.stringify()
+- JSON.parse()
+- STORAGE_KEYS
+
 ## Funcionalidades previstas
 
 Durante las siguientes versiones se desarrollarán:
@@ -110,4 +117,4 @@ Durante las siguientes versiones se desarrollarán:
 
 ## Versión actual
 
-v0.4.0 — Modelo Banco y regls del dominio bancario
+v0.5.0 — Persistencia con LocalStorage y StorageService

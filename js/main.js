@@ -15,6 +15,9 @@ import { Cuenta } from './models/Cuenta.js';
 import { Movimiento } from './models/Movimiento.js';
 import { Banco } from './models/Banco.js';
 
+// IMPORTAR SERVICIO DE PEERSISTENCIA CON LOCALSTORAGE
+import { STORAGE_KEYS, storageService } from './services/StorageService.js';
+
 // mOSTRAMOS NUESTROS IMPORTS
 console.log('Sistema de gstion bancaria -v0.2.0');
 
@@ -36,83 +39,108 @@ console.log('Fecha formateada: ', formatDate(new Date()));
 // Separar los digitos de la cuenta
 console.log('Numero de cuenta: ', formatAccountNumber('123456789012'));
 
-// INSTANCIAS
-console.log('sistema de Gestión bancaria - v0.3.0');
-// USUARIO: usuario demo
-const usuarioDemo = new Usuario({
-  nombre: 'Juan suarez',
-  email: 'juan@correo.com',
-  telefono: '5512345678',
-  password: '123456',
-});
-console.log('Usuario: ', usuarioDemo);
+// GUARDAR ESTADO DEL BANCO version v0.5.0
+function guardarBanco(banco) {
+  // GUARDAR USUARIOS
+  storageService.guardar(STORAGE_KEYS.USUARIOS, banco.usuarios);
 
-// CUENTA: cuenta demo
-const cuentaDemo = new Cuenta({
-  numeroCuenta: '123456789012',
-  usuarioId: usuarioDemo.id,
-});
-console.log('Cuenta: ', cuentaDemo);
+  // GUARDAR CUENTAS
+  storageService.guardar(STORAGE_KEYS.CUENTAS, banco.cuentas);
 
-// PROBAR METODOS
-// DEPOSITO DEMOSTRACION
-cuentaDemo.depositar(1000);
-console.log('Saldo despuest del deposito: ', formatCurrency(cuentaDemo.saldo));
+  // GUARDAR MOVIMIENTOS
+  storageService.guardar(STORAGE_KEYS.MOVIMIENTOS, banco.movimientos);
 
-// MOVIMIENTO
-const movimientoDemo = new Movimiento({
-  tipo: 'DEPOSITO',
-  monto: 1000,
-  descripcion: 'Deposito inicial',
-  // Asociamos el depsito con la cuenta
-  cuentaOrigen: cuentaDemo.id,
-  saldoResultante: cuentaDemo.saldo,
-});
-console.log('Movimiento: ', movimientoDemo);
+  //
+}
 
-console.log(usuarioDemo.id === cuentaDemo.usuarioId);
-console.log(usuarioDemo.id === cuentaDemo.usuarioId);
+// CARGAR DATOS DEL BANCO: rtecupera la información persistida
+function cargarBanco() {
+  // RECUPERAR USUARIOS
+  const usuariosGuardados = storageService.obtener(STORAGE_KEYS.USUARIOS, []);
 
-// USUARIO DEMO
-console.log('Sistema de Gestión Bancaria - v0.4.0');
+  // RECUPERAR CUENTAS
+  const cuentasGuardadas = storageService.obtener(STORAGE_KEYS.CUENTAS, []);
 
-// Registrar el usaurio a traves del banco
-const bancoDemo = new Banco();
-bancoDemo.agregarUsuario(usuarioDemo);
-console.log('Usuarios registrados ', bancoDemo.usuarios);
+  // RECUPERAR MOVIMIENTOS
+  const movimientosGuardados = storageService.obtener(
+    STORAGE_KEYS.MOVIMIENTOS,
+    [],
+  );
 
-// Registrar cuenta demo
-bancoDemo.agregarCuenta(cuentaDemo);
-console.log(
-  'Cuenta del usuario: ',
-  bancoDemo.obtenerCuentasDeUsuario(usuarioDemo.id),
-);
+  // RECONSTRUIR USUARIOS
+  const usuarios = usuariosGuardados.map((usuario) => new Usuario(usuario));
 
-// REALIZAR DEPOSITO DEMO
-// Banco coordianra toda la operación
-const depositoDemo = bancoDemo.realizarDeposito({
-  cuentaId: cuentaDemo.id,
-  monto: 1000,
-  descripcion: 'Deposito para las cocas',
-});
+  // RECONSTRUIR LAS Cuentas
+  const cuentas = cuentasGuardadas.map((cuenta) => new Cuenta(cuenta));
 
-console.log('Movimeinto generado: ', depositoDemo);
-console.log('Saldo actual: ', formatCurrency(cuentaDemo.saldo));
+  // RECONSTRUIR MOVIMIENTOS
+  const movimientos = movimientosGuardados.map(
+    (movimeinto) => new Movimiento(movimeinto),
+  );
 
-// BUSCAR POR ID
-const usuarioEncontrado = bancoDemo.buscarUsusarioPorId(usuarioDemo.id);
-console.log('Usuario encontrado: ', usuarioEncontrado);
+  // CREO NUEVAMENTE EL BANCO: mediante las colecciones reconstruidad
+  return new Banco({
+    usuarios,
+    cuentas,
+    movimientos,
+  });
+}
 
-// PRUEBA OBTENER CUENTAS DEL USUARIO
-const cuentasUsuario = bancoDemo.obtenerCuentasDeUsuario(usuarioDemo.id);
-console.log('Cuentas del usuario: ', cuentasUsuario);
+// CARGAR BANCO PERSISTIDO
+const bancoDemo = cargarBanco();
 
-// PRUEBA NEGATIVA
-try {
+if (bancoDemo.usuarios.length === 0) {
+  // CREAMOS EL USUARIO INICIAL
+  const usuarioDemo = new Usuario({
+    nombre: 'Juan Suarez',
+    email: 'juan@correo.com',
+    telefono: '5512345678',
+    password: '123456',
+  });
+
+  // REGISTAR USUARIO
+  bancoDemo.agregarUsuario(usuarioDemo);
+
+  // CREAR CUENTA INICIAL
+  const cuentaDemo = new Cuenta({
+    numeroCuenta: '123456789012',
+    usuarioId: usuarioDemo.id,
+  });
+
+  bancoDemo.agregarCuenta(cuentaDemo);
+
   bancoDemo.realizarDeposito({
     cuentaId: cuentaDemo.id,
-    monto: -500,
+    monto: 1000,
+    descripcion: 'Deposito para las cocas',
   });
-} catch (error) {
-  console.log('Error encontrado: ', error.message);
+
+  guardarBanco(bancoDemo);
+  console.log('Datos iniciales guardados');
+}
+
+//DATOS RECUPERADOS
+console.log('Bsnco recuperado: ', bancoDemo);
+
+//MOSTRAR USUARIOS
+console.log('Usuarios almacenados: ', bancoDemo.usuarios);
+
+// MOSTRAR CUENTAS
+console.log('Cuentas almacenadas: ', bancoDemo.cuentas);
+
+// MOSTRAR MOVIMIENTOS
+console.log('Movimientos almacenados: ', bancoDemo.movimientos);
+
+// OBTENER PRIMEA CUENTA
+const cuentaPrincipal = bancoDemo.cuentas[0] || null;
+
+// VALIDAR SI EXISTE
+if (cuentaPrincipal) {
+  console.log('Saldo persistido: ', formatCurrency(cuentaPrincipal.saldo));
+
+  // utiliza5r instance of que verifica la informacion despues de recuperarla
+  console.log(
+    '¿La cuenta recuperada sigue siendo una instancia de Cuenta?',
+    cuentaPrincipal instanceof Cuenta,
+  );
 }
