@@ -74,6 +74,21 @@ Propiedades principales:
 - `saldoResultante`
 - `fecha`
 
+### Banco
+
+- agregarUsuario()
+- buscarUsuarioPorId()
+
+- agregarCuenta()
+- buscarCuentaPorId()
+- buscarCuentaPorNumero()
+- obtenerCuentasDeUsuario()
+
+- registrarMovimiento()
+- obtenerMovimientosDeCuenta()
+
+- realizarDeposito()
+
 ## Funcionalidades previstas
 
 Durante las siguientes versiones se desarrollarán:
@@ -95,4 +110,4 @@ Durante las siguientes versiones se desarrollarán:
 
 ## Versión actual
 
-v0.3.0 — Modelado del dominio con Programación Orientada a Objetos
+v0.4.0 — Modelo Banco y regls del dominio bancario

@@ -13,6 +13,7 @@ import {
 import { Usuario } from './models/Usuario.js';
 import { Cuenta } from './models/Cuenta.js';
 import { Movimiento } from './models/Movimiento.js';
+import { Banco } from './models/Banco.js';
 
 // mOSTRAMOS NUESTROS IMPORTS
 console.log('Sistema de gstion bancaria -v0.2.0');
@@ -71,3 +72,47 @@ console.log('Movimiento: ', movimientoDemo);
 
 console.log(usuarioDemo.id === cuentaDemo.usuarioId);
 console.log(usuarioDemo.id === cuentaDemo.usuarioId);
+
+// USUARIO DEMO
+console.log('Sistema de Gestión Bancaria - v0.4.0');
+
+// Registrar el usaurio a traves del banco
+const bancoDemo = new Banco();
+bancoDemo.agregarUsuario(usuarioDemo);
+console.log('Usuarios registrados ', bancoDemo.usuarios);
+
+// Registrar cuenta demo
+bancoDemo.agregarCuenta(cuentaDemo);
+console.log(
+  'Cuenta del usuario: ',
+  bancoDemo.obtenerCuentasDeUsuario(usuarioDemo.id),
+);
+
+// REALIZAR DEPOSITO DEMO
+// Banco coordianra toda la operación
+const depositoDemo = bancoDemo.realizarDeposito({
+  cuentaId: cuentaDemo.id,
+  monto: 1000,
+  descripcion: 'Deposito para las cocas',
+});
+
+console.log('Movimeinto generado: ', depositoDemo);
+console.log('Saldo actual: ', formatCurrency(cuentaDemo.saldo));
+
+// BUSCAR POR ID
+const usuarioEncontrado = bancoDemo.buscarUsusarioPorId(usuarioDemo.id);
+console.log('Usuario encontrado: ', usuarioEncontrado);
+
+// PRUEBA OBTENER CUENTAS DEL USUARIO
+const cuentasUsuario = bancoDemo.obtenerCuentasDeUsuario(usuarioDemo.id);
+console.log('Cuentas del usuario: ', cuentasUsuario);
+
+// PRUEBA NEGATIVA
+try {
+  bancoDemo.realizarDeposito({
+    cuentaId: cuentaDemo.id,
+    monto: -500,
+  });
+} catch (error) {
+  console.log('Error encontrado: ', error.message);
+}
