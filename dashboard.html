@@ -3,22 +3,33 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard</title>
+    <title>Dashboard Sistema de Gestion Bancaria</title>
     <link rel="stylesheet" href="css/styles.css" />
   </head>
-  <body class="dashboard-page">
-    <main class="dashboard-simple">
-      <h1>Dashboard</h1>
+  <body class="app-dashboard">
+    <header class="topbar">
+      <div>
+        <h1>Banco Digital</h1>
 
-      <!--DashboardUi, moduficara aqui-->
-      <p id="nombreUsuario"></p>
+        <p>Sistema de Gestión Bancaria</p>
+      </div>
 
-      <p>La sesión se encuentra activa correctamente</p>
-
-      <button type="button" id="logoutBtn" class="btn btn-primary">
-        Cerrar sesión
+      <button type="button" id="logoutBtn" class="btn btn-secondary">
+        Cerrar Sesión
       </button>
-    </main>
+    </header>
+
+    <nav class="dashboard-nav">
+      <a href="dashboard.html" class="active"> Dashboard </a>
+
+      <a href="cuenta.html"> Mi cuenta </a>
+
+      <a href="movimientos.html"> Movimientos </a>
+
+      <a href="Transferencias"> Transferencias </a>
+    </nav>
+
+    <main class="dashboard-content" id="dashboardRoot"></main>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script type="module" src="./js/ui/DashboardUI.js"></script>

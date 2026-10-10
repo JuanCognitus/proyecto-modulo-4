@@ -107,6 +107,13 @@ Propiedades principales:
 - eventos
 - dashboard.html
 
+### BancoService.js
+
+- consume información bancaria
+- muestra saldo
+- muestra cuentas
+- muestra movimientos
+
 ## Funcionalidades previstas
 
 Durante las siguientes versiones se desarrollarán:
@@ -128,4 +135,4 @@ Durante las siguientes versiones se desarrollarán:
 
 ## Versión actual
 
-v0.6.0 — Registro, autenticación, sesión y SweetAlert2
+v0.7.0 — BancoService y Dashboard bancario
