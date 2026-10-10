@@ -1,146 +1,260 @@
-console.log('Sistema de Gestión Bancaria - v0.1.0');
-
 // IMPORTAR VALIDADORES, HELPERS Y FORMATEADORES
-import { validarCampoObligatorio, validarMonto } from './utils/validators.js';
-import { generarId } from './utils/helpers.js';
-import {
-  formatCurrency,
-  formatDate,
-  formatAccountNumber,
-} from './utils/formatters.js';
+import { validarCampoObligatorio } from './utils/validators.js';
+import { generarNumeroCuenta } from './utils/helpers.js';
 
 // IMPORTAR MODELOS
 import { Usuario } from './models/Usuario.js';
 import { Cuenta } from './models/Cuenta.js';
-import { Movimiento } from './models/Movimiento.js';
-import { Banco } from './models/Banco.js';
 
 // IMPORTAR SERVICIO DE PEERSISTENCIA CON LOCALSTORAGE
 import { STORAGE_KEYS, storageService } from './services/StorageService.js';
 
-// mOSTRAMOS NUESTROS IMPORTS
-console.log('Sistema de gstion bancaria -v0.2.0');
+// IMPORTAR AUTENTICACIÓN
+import { authService } from './services/AuthService.js';
 
-// MOSTRAMOS VALIDACIONES DEBEN MOSTRAR TRU
-console.log('Campo obligatorio : ', validarCampoObligatorio('Banco digital'));
-
-// Validacion del monto debe regresar true
-console.log('Monto valido: ', validarMonto(1000));
-
-// mostramos generador dinamico de id
-console.log('ID generado: ', generarId());
-
-// Convertir 1500 a formato monetario MXN
-console.log('Monto formateado: ', formatCurrency(1500));
-
-// Formateamosla fecha actual
-console.log('Fecha formateada: ', formatDate(new Date()));
-
-// Separar los digitos de la cuenta
-console.log('Numero de cuenta: ', formatAccountNumber('123456789012'));
-
-// GUARDAR ESTADO DEL BANCO version v0.5.0
-function guardarBanco(banco) {
-  // GUARDAR USUARIOS
-  storageService.guardar(STORAGE_KEYS.USUARIOS, banco.usuarios);
-
-  // GUARDAR CUENTAS
-  storageService.guardar(STORAGE_KEYS.CUENTAS, banco.cuentas);
-
-  // GUARDAR MOVIMIENTOS
-  storageService.guardar(STORAGE_KEYS.MOVIMIENTOS, banco.movimientos);
-
-  //
-}
-
-// CARGAR DATOS DEL BANCO: rtecupera la información persistida
-function cargarBanco() {
+// INICIALIZAR STORAGE
+function inicializarStorage() {
   // RECUPERAR USUARIOS
-  const usuariosGuardados = storageService.obtener(STORAGE_KEYS.USUARIOS, []);
+  const usuarios = storageService.obtener(STORAGE_KEYS.USUARIOS, null);
 
   // RECUPERAR CUENTAS
-  const cuentasGuardadas = storageService.obtener(STORAGE_KEYS.CUENTAS, []);
+  const cuentas = storageService.obtener(STORAGE_KEYS.CUENTAS, null);
 
   // RECUPERAR MOVIMIENTOS
-  const movimientosGuardados = storageService.obtener(
-    STORAGE_KEYS.MOVIMIENTOS,
-    [],
+  const movimientos = storageService.obtener(STORAGE_KEYS.MOVIMIENTOS, null);
+
+  // CREAMOS USUARIO SI NO EXISTE
+  if (usuarios === null) {
+    storageService.guardar(STORAGE_KEYS.USUARIOS, []);
+  }
+
+  // CREAR CUENTAS SI NO EXISTE
+  if (movimientos === null) {
+    storageService.guardar(STORAGE_KEYS.MOVIMIENTOS, []);
+  }
+}
+
+// MANEJAR EL REGISTRO
+function manejarRegistro(event) {
+  // EVITAR REFRESH DE PAGINA
+  event.preventDefault();
+
+  // OBTENEMOS EL NOMBRE
+  const nombre = document.querySelector('#registroNombre').value.trim();
+
+  // OBTENEMOS EL EMAIL
+  const email = document
+    .querySelector('#registroEmail')
+    .value.trim()
+    .toLowerCase();
+
+  // OBTENER TELEFONO
+  const telefono = document.querySelector('#registroTelefono').value.trim();
+
+  // OBTENER CONTRASEÑA
+  const password = document.querySelector('#registroPassword').value;
+
+  // CONFIRMAR CONTRASEÑA
+  const confirmarPassword = document.querySelector(
+    '#registroConfirmPassword',
+  ).value;
+
+  // VALIDACIÓN DE CAMPOS OBLIGATORIOS
+  if (
+    !validarCampoObligatorio(nombre) ||
+    !validarCampoObligatorio(email) ||
+    !validarCampoObligatorio(password)
+  ) {
+    // mostrar una alerta con SweetAlert
+    Swal.fire({
+      icon: 'warning',
+      title: 'Campos incompletos',
+      text: 'Completa los campos obligatorios',
+    });
+
+    return;
+  }
+
+  // VALIDAR LONGITUD DE CONTRASEÑA
+  if (password.length < 6) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Contraseña inválida',
+      text: 'La contraseña debe tener al menos 6 caracteres',
+    });
+
+    return;
+  }
+
+  // COMPARAR CONTRASEÑAS
+  if (password !== confirmarPassword) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Contraseñas diferentes',
+      text: 'Las contraseñas no coinciden',
+    });
+
+    return;
+  }
+
+  // RECUPERAR USUARIOS PARA EVITAR CORREOS DUPLICADOS
+  const usuarios = storageService.obtener(STORAGE_KEYS.USUARIOS, []);
+
+  // BUSCAR CORREO DUPLICADO
+  const emailExistente = usuarios.some(
+    (usuario) => usuario.email.toLowerCase() === email,
   );
 
-  // RECONSTRUIR USUARIOS
-  const usuarios = usuariosGuardados.map((usuario) => new Usuario(usuario));
+  // DETENER REGISTRO DUPLICADO
+  if (emailExistente) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Correo registrado',
+      text: 'Ya existe un usuario con este correo',
+    });
 
-  // RECONSTRUIR LAS Cuentas
-  const cuentas = cuentasGuardadas.map((cuenta) => new Cuenta(cuenta));
+    return;
+  }
 
-  // RECONSTRUIR MOVIMIENTOS
-  const movimientos = movimientosGuardados.map(
-    (movimeinto) => new Movimiento(movimeinto),
+  const nuevoUsuario = new Usuario({
+    nombre,
+    email,
+    telefono,
+    password,
+  });
+
+  // NUMERO DE CUENTA
+  let numeroCuenta;
+
+  // GENERAR NUMERO UNICO
+  do {
+    numeroCuenta = generarNumeroCuenta();
+  } while (
+    //Recuperamos todas las cuentas
+    storageService
+      .obtener(STORAGE_KEYS.CUENTAS, [])
+      .some((cuenta) => cuenta.numeroCuenta === numeroCuenta)
   );
 
-  // CREO NUEVAMENTE EL BANCO: mediante las colecciones reconstruidad
-  return new Banco({
-    usuarios,
-    cuentas,
-    movimientos,
+  // CREAR CUENTA
+  const nuevaCuenta = new Cuenta({
+    numeroCuenta,
+    tipo: 'Ahorro',
+    saldo: 0,
+    usuarioId: nuevoUsuario.id,
+  });
+
+  // RECUPERAR CUENTAS
+  const cuentas = storageService.obtener(STORAGE_KEYS.CUENTAS, []);
+
+  // AGREGAR USUARIO
+  usuarios.push(nuevoUsuario);
+
+  // AGREGAR CUENTA
+  cuentas.push(nuevaCuenta);
+
+  // GUARDAR USUARIOS
+  storageService.guardar(STORAGE_KEYS.USUARIOS, usuarios);
+
+  // GUARDAMOS CUENTAS
+  storageService.guardar(STORAGE_KEYS.CUENTAS, cuentas);
+
+  // REGISTRO EXITOSO
+  Swal.fire({
+    icon: 'success',
+    title: 'Registro exitoso',
+    text: 'Tu usuario y cuenta bancaria fueron creados correctamente.',
+    confirmButtonText: 'Continuar',
+  }).then(() => {
+    // LIMPIAR FORMULARIO
+    document.querySelector('#formRegistro').reset();
+
+    // COPIAR CORREO AL LOGIN
+    document.querySelector('#loginEmail').value = email;
   });
 }
 
-// CARGAR BANCO PERSISTIDO
-const bancoDemo = cargarBanco();
+// MANEJAR LOGIN
+function manejarLogin(event) {
+  // EVITAR ENVIO AUTOMATICO
+  event.preventDefault();
 
-if (bancoDemo.usuarios.length === 0) {
-  // CREAMOS EL USUARIO INICIAL
-  const usuarioDemo = new Usuario({
-    nombre: 'Juan Suarez',
-    email: 'juan@correo.com',
-    telefono: '5512345678',
-    password: '123456',
-  });
+  // OBTENER MAIL
+  const email = document
+    .querySelector('#loginEmail')
+    .value.trim()
+    .toLowerCase();
 
-  // REGISTAR USUARIO
-  bancoDemo.agregarUsuario(usuarioDemo);
+  // OBTENER CONTRASEÑA
+  const password = document.querySelector('#loginPassword').value;
 
-  // CREAR CUENTA INICIAL
-  const cuentaDemo = new Cuenta({
-    numeroCuenta: '123456789012',
-    usuarioId: usuarioDemo.id,
-  });
+  // VALIDAMOS CAMPOS
+  if (!validarCampoObligatorio(email) || !validarCampoObligatorio(password)) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Campos incompletos',
+      text: 'Ingresa tu correo y contraseña',
+    });
 
-  bancoDemo.agregarCuenta(cuentaDemo);
+    return;
+  }
 
-  bancoDemo.realizarDeposito({
-    cuentaId: cuentaDemo.id,
-    monto: 1000,
-    descripcion: 'Deposito para las cocas',
-  });
+  // INTENTAR LOGIN
+  try {
+    //AUTENTICAR USUARIO
+    const usuario = authService.login(email, password);
+    console.log('Usuario autenticado:', usuario);
 
-  guardarBanco(bancoDemo);
-  console.log('Datos iniciales guardados');
+    // LOGIN EXITOSO
+    Swal.fire({
+      icon: 'success',
+      title: `Bienvenido, ${usuario.nombre}`,
+      text: 'Inicio de sesión correcto. ',
+      timer: 1500,
+      showConfirmButton: false,
+    }).then(() => {
+      // REDIRIGIR AL DASHBOARD
+      console.log('Redirigiendo al Dashboard...');
+      window.location.href = 'dashboard.html';
+    });
+  } catch (error) {
+    // LOGIN INCORRECTO
+    Swal.fire({
+      icon: 'error',
+      title: 'No fue posible iniciar sesión',
+      text: error.message,
+    });
+  }
 }
 
-//DATOS RECUPERADOS
-console.log('Bsnco recuperado: ', bancoDemo);
+// INICIALIZAR APLICACIÓN
+function init() {
+  // PREPARAR LOCALSTORAGE
+  inicializarStorage();
 
-//MOSTRAR USUARIOS
-console.log('Usuarios almacenados: ', bancoDemo.usuarios);
+  // COMPROBAR SESIÓN
+  if (authService.getCurrentUser()) {
+    window.location.href = 'dashboard.html';
 
-// MOSTRAR CUENTAS
-console.log('Cuentas almacenadas: ', bancoDemo.cuentas);
+    return;
+  }
 
-// MOSTRAR MOVIMIENTOS
-console.log('Movimientos almacenados: ', bancoDemo.movimientos);
+  // OBTENER LOGIN
+  const formLogin = document.querySelector('#formLogin');
 
-// OBTENER PRIMEA CUENTA
-const cuentaPrincipal = bancoDemo.cuentas[0] || null;
+  // OBTENER REGISTRO
+  const formRegistro = document.querySelector('#formRegistro');
 
-// VALIDAR SI EXISTE
-if (cuentaPrincipal) {
-  console.log('Saldo persistido: ', formatCurrency(cuentaPrincipal.saldo));
+  // EVENTO LOGIN: cuando ocurra el submit ejecutar manejarLogin
+  if (formLogin) {
+    formLogin.addEventListener('submit', manejarLogin);
+  }
 
-  // utiliza5r instance of que verifica la informacion despues de recuperarla
-  console.log(
-    '¿La cuenta recuperada sigue siendo una instancia de Cuenta?',
-    cuentaPrincipal instanceof Cuenta,
-  );
+  // EVENTO REGISTRO: cuando ocurra submit ejecutar manejarRegistro
+  if (formRegistro) {
+    formRegistro.addEventListener('submit', manejarRegistro);
+  }
 }
+
+// EJECUTAR INICIALIZACIÓN
+init();

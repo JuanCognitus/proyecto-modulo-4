@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body class="dashboard-page">
+    <main class="dashboard-simple">
+      <h1>Dashboard</h1>
+
+      <!--DashboardUi, moduficara aqui-->
+      <p id="nombreUsuario"></p>
+
+      <p>La sesión se encuentra activa correctamente</p>
+
+      <button type="button" id="logoutBtn" class="btn btn-primary">
+        Cerrar sesión
+      </button>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="module" src="./js/ui/DashboardUI.js"></script>
+  </body>
+</html>
