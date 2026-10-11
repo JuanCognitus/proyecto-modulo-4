@@ -150,6 +150,16 @@ body {
   .auth-page {
     padding: 32px 16px;
   }
+
+  /* En móvil Mi cuenta pasa de dos columnas a una. */
+  .cuenta-layout {
+    grid-template-columns: 1fr;
+  }
+
+  /* Titular y estado dejan de estar horizontalmente. */
+  .cuenta-card-header {
+    flex-direction: column;
+  }
 }
 
 /* =========================================
@@ -381,4 +391,183 @@ body {
 
     flex-direction: column;
   }
+}
+
+/* =========================================
+   MI CUENTA
+========================================= */
+/* Página general de Mi cuenta. */
+.app-cuenta {
+  min-height: 100vh;
+
+  background-color: #f4f6f8;
+}
+
+/* Limita el ancho del contenido y lo centra horizontalmente. */
+.cuenta-content {
+  width: min(1100px, 92%);
+
+  margin: 32px auto;
+}
+
+/* Divide la página en: izquierda = datos bancarios derecha = configuración. */
+.cuenta-layout {
+  display: grid;
+
+  grid-template-columns:
+    minmax(280px, 0.8fr)
+    minmax(0, 1.4fr);
+
+  gap: 24px;
+
+  align-items: start;
+}
+
+/* Tarjeta principal bancaria. */
+.cuenta-card {
+  padding: 28px;
+
+  background-color: #ffffff;
+
+  border-radius: 14px;
+
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+/* Organiza titular y badge horizontalmente. */
+.cuenta-card-header {
+  display: flex;
+
+  align-items: flex-start;
+
+  justify-content: space-between;
+
+  gap: 16px;
+
+  margin-bottom: 24px;
+}
+
+.cuenta-card-header h2 {
+  margin-bottom: 5px;
+}
+
+/* Texto secundario del titular. */
+.cuenta-meta {
+  color: #6b7280;
+}
+
+/* Organiza verticalmente los datos bancarios. */
+.cuenta-detalle {
+  display: grid;
+
+  gap: 14px;
+}
+
+.cuenta-detalle p {
+  padding-bottom: 14px;
+
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* El último dato no necesita línea divisoria inferior. */
+.cuenta-detalle p:last-child {
+  padding-bottom: 0;
+
+  border-bottom: none;
+}
+
+/* Estilo base del indicador de estado. */
+.badge {
+  display: inline-flex;
+
+  align-items: center;
+
+  padding: 6px 10px;
+
+  /* Un valor alto genera el aspecto de cápsula. */
+  border-radius: 999px;
+
+  font-size: 0.8rem;
+
+  font-weight: 700;
+}
+
+/* Estado activo. */
+.badge-success {
+  background-color: #dcfce7;
+
+  color: #166534;
+}
+
+/* Estado inactivo. */
+.badge-danger {
+  background-color: #fee2e2;
+
+  color: #991b1b;
+}
+
+/* Organiza las diferentes secciones de configuración. */
+.cuenta-panel {
+  display: grid;
+
+  gap: 24px;
+}
+
+/* Tarjeta reutilizable para cada sección. */
+.cuenta-section {
+  padding: 28px;
+
+  background-color: #ffffff;
+
+  border-radius: 14px;
+
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+.cuenta-section h3 {
+  margin-bottom: 22px;
+}
+
+/* Organiza los controles del formulario. */
+.cuenta-form {
+  display: grid;
+
+  gap: 4px;
+}
+
+/* Reserva espacio para mensajes de error aunque todavía estén vacíos. */
+.field-error {
+  min-height: 18px;
+
+  margin-top: 6px;
+
+  color: #dc2626;
+
+  font-size: 0.85rem;
+}
+
+/* Diferencia visualmente las operaciones destructivas. */
+.cuenta-section-danger {
+  border: 1px solid #fecaca;
+}
+
+.cuenta-section-danger h3 {
+  color: #b91c1c;
+}
+
+.cuenta-warning {
+  margin-bottom: 18px;
+
+  color: #7f1d1d;
+}
+
+/* Botón utilizado para eliminar. */
+.btn-danger {
+  background-color: #dc2626;
+
+  color: #ffffff;
+}
+
+.btn-danger:hover {
+  background-color: #b91c1c;
 }

@@ -114,6 +114,14 @@ Propiedades principales:
 - muestra cuentas
 - muestra movimientos
 
+## CuentaIU.js
+
+- cuenta.html
+- CuentaUI.js
+- actualizarUsuario()
+- cambiarPassword()
+- eliminarUsuario()
+
 ## Funcionalidades previstas
 
 Durante las siguientes versiones se desarrollarán:
@@ -135,4 +143,4 @@ Durante las siguientes versiones se desarrollarán:
 
 ## Versión actual
 
-v0.7.0 — BancoService y Dashboard bancario
+v0.8.0 — Gestión de cuenta, perfil y seguridad

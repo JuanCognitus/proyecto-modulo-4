@@ -137,6 +137,145 @@ class BancoService {
       totalMovimientos: movimientos.length,
     };
   }
+
+  // ACTUALIZAR USUARIO
+  actualizarUsuario(usuarioId, { nombre, email, telefono }) {
+    // Recupera todos los usuarios almacenados.
+    const usuarios = storageService.obtener(STORAGE_KEYS.USUARIOS, []);
+
+    // Busca específicamente al usuario que queremos modificar.
+    const usuario = usuarios.find((item) => item.id === usuarioId);
+
+    // No podemos modificar un usuario inexistente.
+    if (!usuario) {
+      throw new Error('El usuario no existe.');
+    }
+
+    // Normaliza el email eliminando espacios y convirtiéndolo a minúsculas.
+    const emailNormalizado = String(email).trim().toLowerCase();
+
+    // Comprueba si OTRO usuario ya tiene registrado ese mismo correo.
+    const emailDuplicado = usuarios.some(
+      (item) =>
+        item.email.toLowerCase() === emailNormalizado && item.id !== usuarioId,
+    );
+
+    // Evita duplicidad de correos.
+    if (emailDuplicado) {
+      throw new Error('Ya existe un usuario con este correo.');
+    }
+
+    // Crea un nuevo array. Cuando encuentra al usuario solicitado, conserva sus propiedades con Spread Operator
+    const usuariosActualizados = usuarios.map((item) =>
+      item.id === usuarioId
+        ? {
+            ...item,
+            nombre: nombre.trim(),
+            email: emailNormalizado,
+            telefono: telefono.trim(),
+          }
+        : item,
+    );
+
+    // Persiste el nuevo array.
+    storageService.guardar(STORAGE_KEYS.USUARIOS, usuariosActualizados);
+
+    // Reconstruye Banco para mantener sincronizada la información que se encuentra en memoria
+    this.recargarBanco();
+
+    // Busca y devuelve el usuario actualizado.
+    return usuariosActualizados.find((item) => item.id === usuarioId) || null;
+  }
+
+  cambiarPassword(usuarioId, passwordActual, passwordNueva) {
+    const usuarios = storageService.obtener(STORAGE_KEYS.USUARIOS, []);
+
+    const usuario = usuarios.find((item) => item.id === usuarioId);
+
+    if (!usuario) {
+      throw new Error('El usuario no existe.');
+    }
+
+    if (usuario.password !== passwordActual) {
+      throw new Error('La contraseña actual no es correcta.');
+    }
+
+    if (passwordNueva === passwordActual) {
+      throw new Error('La nueva contraseña debe ser diferente.');
+    }
+
+    if (passwordNueva.length < 6) {
+      throw new Error('La nueva contraseña debe tener al menos 6 caracteres.');
+    }
+
+    const usuariosActualizados = usuarios.map((item) =>
+      item.id === usuarioId
+        ? {
+            ...item,
+            password: passwordNueva,
+          }
+        : item,
+    );
+
+    storageService.guardar(STORAGE_KEYS.USUARIOS, usuariosActualizados);
+
+    this.recargarBanco();
+
+    return true;
+  }
+
+  // ELIMINAR USUARIO
+  eliminarUsuario(usuarioId) {
+    const usuarios = storageService.obtener(STORAGE_KEYS.USUARIOS, []);
+
+    const cuentas = storageService.obtener(STORAGE_KEYS.CUENTAS, []);
+
+    const movimientos = storageService.obtener(STORAGE_KEYS.MOVIMIENTOS, []);
+
+    const usuario = usuarios.find((item) => item.id === usuarioId);
+
+    if (!usuario) {
+      throw new Error('El usuario no existe.');
+    }
+
+    const cuentasUsuario = cuentas.filter(
+      (cuenta) => cuenta.usuarioId === usuarioId,
+    );
+
+    const tieneSaldo = cuentasUsuario.some(
+      (cuenta) => Number(cuenta.saldo) > 0,
+    );
+
+    if (tieneSaldo) {
+      throw new Error(
+        'No puedes eliminar tu cuenta mientras tengas saldo disponible.',
+      );
+    }
+
+    const cuentasUsuarioIds = cuentasUsuario.map((cuenta) => cuenta.id);
+
+    const usuariosFiltrados = usuarios.filter((item) => item.id !== usuarioId);
+
+    const cuentasFiltradas = cuentas.filter(
+      (cuenta) => cuenta.usuarioId !== usuarioId,
+    );
+
+    const movimientosFiltrados = movimientos.filter(
+      (movimiento) =>
+        !cuentasUsuarioIds.includes(movimiento.cuentaOrigen) &&
+        !cuentasUsuarioIds.includes(movimiento.cuentaDestino),
+    );
+
+    storageService.guardar(STORAGE_KEYS.USUARIOS, usuariosFiltrados);
+
+    storageService.guardar(STORAGE_KEYS.CUENTAS, cuentasFiltradas);
+
+    storageService.guardar(STORAGE_KEYS.MOVIMIENTOS, movimientosFiltrados);
+
+    this.recargarBanco();
+
+    return true;
+  }
 }
 
 // Creamos y exportamos una unica instancia reutilizable
