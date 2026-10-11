@@ -26,14 +26,14 @@ export class Banco {
   }
 
   // BUSCAR USUARIO POR ID
-  buscarUsusarioPorId(usuarioId) {
+  buscarUsuarioPorId(usuarioId) {
     return this.usuarios.find((usuario) => usuario.id === usuarioId) || null;
   }
 
   // AGREGAR CUENTA: Registra una cuenta bancaria despues de comprobar que el usuario existe
   agregarCuenta(cuenta) {
     // Buscamos el propietario
-    const usuario = this.buscarUsusarioPorId(cuenta.usuarioId);
+    const usuario = this.buscarUsuarioPorId(cuenta.usuarioId);
 
     // Hacemos una validacion negativa termina el metodo
     if (!usuario) {
@@ -115,6 +115,98 @@ export class Banco {
     this.registrarMovimiento(movimiento);
 
     return movimiento;
+  }
+
+  // TRANSFERENCIAS
+  realizarTransferencia({
+    cuentaOrigenId,
+    cuentaDestinoId,
+    monto,
+    descripcion = '',
+  }) {
+    // Convertimos el monto recibido a numero
+    const montoNumerico = Number(monto);
+
+    // Validar trnsferencia con monto mayor a 0
+    if (!Number.isFinite(montoNumerico) || montoNumerico <= 0) {
+      throw new Error('Monto inválido, el monto debe ser mayor a cero.');
+    }
+
+    // Buscamos las dos cuentas invlucreadas en la transferencia: origen y destino
+    const origen = this.buscarCuentaPorId(cuentaOrigenId);
+
+    // Buscamos la cuenta que recibira el dinero
+    const destino = this.buscarCuentaPorId(cuentaDestinoId);
+
+    // No continuar conla transacción si la cuenta no existe
+    if (!origen) {
+      throw new Error('La cuenta origen no existe.');
+    }
+
+    // Tampoco podemos continuar sin una cuenta destino
+    if (!destino) {
+      throw new Error('La cuenta destino no existe.');
+    }
+
+    // Validar que las cuentas esten activas para hacer la transaferencia
+    if (!origen.activa) {
+      throw new Error('La cuenta origen no esta activa.');
+    }
+
+    // Evitar recibir dinero en una cuenta inactiva
+    if (!destino.activa) {
+      throw new Error('La cuenta destino no esta activa.');
+    }
+
+    // Evitar transferencias hacia la misma cuenta
+    if (origen.id === destino.id) {
+      throw new Error('No puedes transferir dinero a la misma cuenta');
+    }
+
+    // Validar saldo suficiente para hacer la transferencia
+    if (origen.saldo < montoNumerico) {
+      throw new Error('Saldo insuficiente');
+    }
+
+    // Despues de las validaciones modificamos el saldo de las cuentas
+    origen.retirar(montoNumerico);
+
+    // Depositar el mismo monto a la cuenta destino
+    destino.depositar(montoNumerico);
+
+    // Registramos la operacion desde la cuenta origen
+    const movimientoEnviado = new Movimiento({
+      tipo: 'TRANSFERENCIA_ENVIADA',
+      monto: montoNumerico,
+      descripcion,
+      cuentaOrigen: origen.id,
+      cuentaDestino: destino.id,
+      saldoResultante: origen.saldo,
+    });
+
+    // Registramos la misma operación desde la cuenta receptora
+    const movimientoRecibido = new Movimiento({
+      tipo: 'TRANSFERENCIA_RECIBIDA',
+      monto: montoNumerico,
+      descripcion,
+      cuentaOrigen: origen.id,
+      cuentaDestino: destino.id,
+      saldoResultante: destino.saldo,
+    });
+
+    // Guardamos los movimientos en el historial del Banco
+    this.registrarMovimiento(movimientoEnviado);
+
+    // Agregamos tambien el movimiento
+    this.registrarMovimiento(movimientoRecibido);
+
+    // Regrresamos toda la información util de la operación
+    return {
+      origen,
+      destino,
+      movimientoEnviado,
+      movimientoRecibido,
+    };
   }
 
   // OBTENER MOVIMIENTOS DE UNA CUENTA

@@ -87,7 +87,7 @@ class BancoService {
     const banco = this.obtenerInstanciaBanco();
 
     //Buscar usuario utilizando una regla que ya existe
-    const usuario = banco.buscarUsusarioPorId(usuarioId);
+    const usuario = banco.buscarUsuarioPorId(usuarioId);
 
     //Validación si el usuario no existe
     if (!usuario) {
@@ -136,6 +136,58 @@ class BancoService {
       totalCuentas: cuentas.length,
       totalMovimientos: movimientos.length,
     };
+  }
+
+  // OPERACIONES BANCARIAS
+  realizarDeposito({ cuentaId, monto, descripcion = '' }) {
+    // Obtenemos la instancia reconstruida del Banco
+    const banco = this.obtenerInstanciaBanco();
+
+    // El modo Banco aplica las reglas correspondientes
+    const movimiento = banco.realizarDeposito({ cuentaId, monto, descripcion });
+
+    // Persistimos al nuevo saldo y movimiento generado
+    this.guardarBanco();
+
+    //Regresamos el movimiento creado
+    return movimiento;
+  }
+
+  // TRANSFERENCIA
+  realizarTransferencia({
+    cuentaOrigenId,
+    numeroCuentaDestino,
+    monto,
+    descripcion = '',
+  }) {
+    // Recuperamos el Banco con todas sus cuentas reconstruidas
+    const banco = this.obtenerInstanciaBanco();
+
+    // Normalizamos el numero recibido
+    const numeroDestino = String(numeroCuentaDestino).replace(/\s/g, '').trim();
+
+    // Buscamos la cuenta destino utilizandosu numero de cuenta visible
+    const cuentaDestino = banco.buscarCuentaPorNumero(numeroDestino);
+
+    // Detenemos la operación si el numero proporcionado no corresponde a una cuenta
+    if (!cuentaDestino) {
+      throw new Error('La cuenta destino no existe');
+    }
+
+    // Delegamos las reglas financieras
+    // al modelo Banco.
+    const resultado = banco.realizarTransferencia({
+      cuentaOrigenId,
+      cuentaDestinoId: cuentaDestino.id,
+      monto,
+      descripcion,
+    });
+
+    // Persistimos los dos nuevos saldos
+    // y los movimientos generados.
+    this.guardarBanco();
+
+    return resultado;
   }
 
   // ACTUALIZAR USUARIO

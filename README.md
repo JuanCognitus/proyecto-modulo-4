@@ -122,6 +122,15 @@ Propiedades principales:
 - cambiarPassword()
 - eliminarUsuario()
 
+## TransferenciaUI.js
+
+- transferencia.html
+- transferencia.css
+- realizarDeposito()
+- realizarTransferencia()
+- TRANSFERENCIA_ENVIADA
+- TRANSFERENCIA_RECIBIDA
+
 ## Funcionalidades previstas
 
 Durante las siguientes versiones se desarrollarán:
@@ -143,4 +152,4 @@ Durante las siguientes versiones se desarrollarán:
 
 ## Versión actual
 
-v0.8.0 — Gestión de cuenta, perfil y seguridad
+v0.9.0 — Operaciones bancarias y transferencias.
